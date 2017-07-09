@@ -1,33 +1,35 @@
-# Przykladowy agent do zadania 'zagubiony Wumpus'. Agent porusza sie wezykiem.
-
 import random
+import numpy as np
 from action import Action
 
-# nie zmieniac nazwy klasy
+
 class Agent:
 
-    # nie zmieniac naglowka konstruktora, tutaj agent dostaje wszystkie informacje o srodowisku
     def __init__(self, p, pj, pn, height, width, areaMap):
 
         self.times_moved = 0
-        self.direction = Action.LEFT
+        self.direction = None
 
-        # w ten sposob mozna zapamietac zmienne obiektu
         self.p = p
-        self.pj = pj
-        self.pn = pn
+        self.p_small = (1 - p) / 4.0
+        self.pj = pj    # p found jam if jam exists
+        self.pn = pn    # p found jam if jam doesnt exists
         self.height = height
         self.width = width
-        self.map = areaMap
+        self.map = np.array(areaMap)
+        self.exit_coords = None
+        self.jams_coords = []
 
-        # w tym przykladzie histogram wypelniany jest tak aby na planszy wyszedl gradient
-        self.hist = []
-        for y in range(self.height):
-            self.hist.append([])
-            for x in range(self.width):
-                self.hist[y].append(float(y + x) / (self.width + self.height - 2))
+        # eqal prob
+        self.hist = np.full((height, width), 1. / (height * width - 1))
 
-        # dopisac reszte inicjalizacji agenta
+        for (x, y), v in np.ndenumerate(self.hist):
+            if self.map[x, y] == "W":
+                self.hist[x, y] = 0
+                self.exit_coords = (x, y)
+            elif self.map[x, y] == "J":
+                self.jams_coords.append((x, y))
+
         return
 
     # nie zmieniac naglowka metody, tutaj agent dokonuje obserwacji swiata
