@@ -59,21 +59,20 @@ class Agent:
         # normalization
         self.hist = self.hist / partial_sum
 
-        # dup = np.sum(self.hist)
-        # print(dup)
-
     def __update_hist_after_move(self, move):
         new_hist = np.zeros((self.height, self.width))
-        x_move, y_move = self.__get_move_coords(move)
+        y_move, x_move = self.__get_move_coords(move)
         partial_sum = 0.0
 
         for (y, x), v in np.ndenumerate(self.hist):
             x_dest = (x + x_move) % self.width
-            y_dest = (y + y_move) % self.
+            y_dest = (y + y_move) % self.height
             neigh_coords = self.__get_neighbors(y=y_dest, x=x_dest)
 
+            p_dest = self.hist[y, x] * self.p
             if (y_dest, x_dest) != self.exit_coords:
-                new_hist += self.hist[y_dest, x_dest] * self.p
+                new_hist[y_dest, x_dest] += p_dest
+                partial_sum += p_dest
 
             p_neigh = self.hist[y, x] * self.p_small
             for (y_neigh, x_neigh) in neigh_coords:
@@ -85,20 +84,21 @@ class Agent:
         new_hist = new_hist / partial_sum
 
         self.hist = new_hist
+        print(np.sum(self.hist))
 
     @staticmethod
-    def __get_move_coords(self, move):
+    def __get_move_coords(move):
         return {
-            Action.Up: (0, -1),
-            Action.DOWN: (0, 1),
-            Action.LEFT: (-1, 0),
-            Action.RIGHT: (1, 0)
+            Action.UP: (-1, 0),
+            Action.DOWN: (1, 0),
+            Action.LEFT: (0, -1),
+            Action.RIGHT: (0, 1)
         }.get(move, "error, action not found")
 
     def __get_neighbors(self, y, x):
         return [
-            ((y + 1) % self.height, x),  # UP
-            ((y - 1) % self.height, x),  # DOWN
+            ((y - 1) % self.height, x),  # UP
+            ((y + 1) % self.height, x),  # DOWN
             (y, (x + 1) % self.width),  # RIGHT
             (y, (x - 1) % self.width),  # LEFT
         ]
@@ -106,15 +106,11 @@ class Agent:
     # nie zmieniac naglowka metody, tutaj agent decyduje w ktora strone sie ruszyc,
     # funkcja MUSI zwrocic jedna z wartosci [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
     def move(self):
-        move = Action.DOWN
-        self.__update_hist_after_move(move)
-        if self.times_moved < self.width - 1:
-            self.times_moved += 1
-            return self.direction
-        else:
-            self.times_moved = 0
-            self.direction = Action.RIGHT if self.direction == Action.LEFT else Action.LEFT
-            return Action.DOWN
+        # move = self.__get_move()
+        # self.__update_hist_after_move(move)
+        # return
+        self.__update_hist_after_move(Action.LEFT)
+        return Action.LEFT
 
     # nie zmieniac naglowka metody, tutaj agent udostepnia swoj histogram (ten z filtru
     # histogramowego), musi to byc tablica (lista list, krotka krotek...) o wymarach takich jak
