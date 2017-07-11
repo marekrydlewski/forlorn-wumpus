@@ -6,7 +6,6 @@ from action import Action
 
 
 class Agent:
-
     def __init__(self, p, pj, pn, height, width, areaMap):
 
         self.times_moved = 0
@@ -14,8 +13,8 @@ class Agent:
 
         self.p = p
         self.p_small = (1 - p) / 4.0
-        self.pj = pj    # p found jam if jam exists
-        self.pn = pn    # p found jam if jam doesnt exists
+        self.pj = pj  # p found jam if jam exists
+        self.pn = pn  # p found jam if jam doesnt exists
         self.height = height
         self.width = width
         self.map = np.empty((height, width), dtype='str')
@@ -29,12 +28,12 @@ class Agent:
         # eqal prob
         self.hist = np.full((height, width), 1. / (height * width - 1))
 
-        for (x, y), v in np.ndenumerate(self.hist):
-            if self.map[x][y] == "W":
-                self.hist[x, y] = 0
-                self.exit_coords = (x, y)
-            elif self.map[x][y] == "J":
-                self.jams_coords.append((x, y))
+        for (y, x), v in np.ndenumerate(self.hist):
+            if self.map[y][x] == "W":
+                self.hist[y, x] = 0
+                self.exit_coords = (y, x)
+            elif self.map[y][x] == "J":
+                self.jams_coords.append((y, x))
 
         return
 
@@ -48,24 +47,67 @@ class Agent:
         pn_actual = self.pn if sensor is True else 1.0 - self.pn
         partial_sum = 0.0
 
-        for (x, y), v in np.ndenumerate(self.map):
+        for (y, x), v in np.ndenumerate(self.map):
             if v == "J":
-                self.hist[x, y] *= pj_actual
+                self.hist[y, x] *= pj_actual
             elif v == ".":
-                self.hist[x, y] *= pn_actual
+                self.hist[y, x] *= pn_actual
             else:
-                self.hist[x, y] = 0
-            partial_sum += self.hist[x, y]
+                self.hist[y, x] = 0
+            partial_sum += self.hist[y, x]
 
         # normalization
-        self.hist = self.hist/partial_sum
+        self.hist = self.hist / partial_sum
 
         # dup = np.sum(self.hist)
         # print(dup)
 
+    def __update_hist_after_move(self, move):
+        new_hist = np.zeros((self.height, self.width))
+        x_move, y_move = self.__get_move_coords(move)
+        partial_sum = 0.0
+
+        for (y, x), v in np.ndenumerate(self.hist):
+            x_dest = (x + x_move) % self.width
+            y_dest = (y + y_move) % self.
+            neigh_coords = self.__get_neighbors(y=y_dest, x=x_dest)
+
+            if (y_dest, x_dest) != self.exit_coords:
+                new_hist += self.hist[y_dest, x_dest] * self.p
+
+            p_neigh = self.hist[y, x] * self.p_small
+            for (y_neigh, x_neigh) in neigh_coords:
+                if (y_neigh, x_neigh) != self.exit_coords:
+                    new_hist[y_neigh, x_neigh] += p_neigh
+                    partial_sum += p_neigh
+
+        # normalization
+        new_hist = new_hist / partial_sum
+
+        self.hist = new_hist
+
+    @staticmethod
+    def __get_move_coords(self, move):
+        return {
+            Action.Up: (0, -1),
+            Action.DOWN: (0, 1),
+            Action.LEFT: (-1, 0),
+            Action.RIGHT: (1, 0)
+        }.get(move, "error, action not found")
+
+    def __get_neighbors(self, y, x):
+        return [
+            ((y + 1) % self.height, x),  # UP
+            ((y - 1) % self.height, x),  # DOWN
+            (y, (x + 1) % self.width),  # RIGHT
+            (y, (x - 1) % self.width),  # LEFT
+        ]
+
     # nie zmieniac naglowka metody, tutaj agent decyduje w ktora strone sie ruszyc,
     # funkcja MUSI zwrocic jedna z wartosci [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
     def move(self):
+        move = Action.DOWN
+        self.__update_hist_after_move(move)
         if self.times_moved < self.width - 1:
             self.times_moved += 1
             return self.direction
