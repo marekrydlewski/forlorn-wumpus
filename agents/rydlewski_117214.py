@@ -19,7 +19,7 @@ class Agent:
         self.height = height
         self.width = width
         self.map = np.empty((height, width), dtype='str')
-        self.exit_coords = None
+        self.exit_coord = None
         self.jams_coords = []
 
         for x in range(self.height):
@@ -32,7 +32,7 @@ class Agent:
         for (y, x), v in np.ndenumerate(self.hist):
             if self.map[y][x] == "W":
                 self.hist[y, x] = 0
-                self.exit_coords = (y, x)
+                self.exit_coord = (y, x)
             elif self.map[y][x] == "J":
                 self.jams_coords.append((y, x))
 
@@ -71,13 +71,13 @@ class Agent:
             neigh_coords = self.__get_neighbors(y=y_dest, x=x_dest)
 
             p_dest = self.hist[y, x] * self.p
-            if (y_dest, x_dest) != self.exit_coords:
+            if (y_dest, x_dest) != self.exit_coord:
                 new_hist[y_dest, x_dest] += p_dest
                 partial_sum += p_dest
 
             p_neigh = self.hist[y, x] * self.p_small
             for (y_neigh, x_neigh) in neigh_coords:
-                if (y_neigh, x_neigh) != self.exit_coords:
+                if (y_neigh, x_neigh) != self.exit_coord:
                     new_hist[y_neigh, x_neigh] += p_neigh
                     partial_sum += p_neigh
 
@@ -119,26 +119,45 @@ class Agent:
         return indices
 
     def __get_move_to_nearest_orientation_point(self, coord):
-        orientation_point = self.__get_nearest_orientation_point(coord)
-        
+        coord_y, coord_x = coord
+        dest_y, dest_x = self.__get_nearest_orientation_point(coord)
+
+        if dest_y - coord_y >= 0:
+            dist_down = dest_y - coord_y
+            dist_up = self.height - dest_y + coord_y
+        else:
+            dist_down = self.height - dest_y + coord_y
+            dist_up = abs(dest_y - coord_y)
+
+        if dest_x - coord_x >= 0:
+            dist_left = self.width - dest_x + coord_x
+            dist_right = dest_x - coord_x
+        else:
+            dist_left = self.width - dest_x + coord_x
+            dist_right = abs(dest_x - coord_x)
+
+        return random.choice([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
+
 
     def __get_nearest_orientation_point(self, coord):
-        exit_dist = self.__get_distance_between(coord, self.exit_coords)
+        exit_dist = self.__get_distance_between(coord, self.exit_coord)
         exit_dist_full = np.sum(exit_dist)
 
         nearest_jams = []
 
         for jam_coord in self.jams_coords:
-            jam_exit_dist = self.__get_distance_between(jam_coord, self.exit_coords)
+            jam_exit_dist = self.__get_distance_between(jam_coord, self.exit_coord)
             coord_jam_dist = self.__get_distance_between(jam_coord, coord)
+
             jam_exit_dist_full = np.sum(jam_exit_dist)
             coord_jam_dist_full = np.sum(coord_jam_dist)
             full_dist = jam_exit_dist_full + coord_jam_dist_full
+
             if full_dist <= exit_dist_full and coord_jam_dist_full != 0:
                 nearest_jams.append((coord_jam_dist_full, jam_coord))
 
         if len(nearest_jams) == 0:
-            return self.exit_coords
+            return self.exit_coord
         else:
             return min(nearest_jams, key=lambda x: x[0])
 
