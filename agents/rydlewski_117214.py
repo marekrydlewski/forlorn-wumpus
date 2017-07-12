@@ -2,6 +2,7 @@
 
 import random
 import numpy as np
+from collections import defaultdict
 from action import Action
 
 
@@ -103,14 +104,62 @@ class Agent:
             (y, (x - 1) % self.width),  # LEFT
         ]
 
+    def __get_move(self):
+        max_coords = self.__get_max_coords()
+        move_dict = defaultdict(int)
+
+        for max_coord in max_coords:
+            move_dict[self.__get_move_to_nearest_orientation_point(max_coord)] += 1
+
+        return Action.UP
+
+    def __get_max_coords(self):
+        # toleration must be increased
+        indices = np.argwhere(np.isclose(self.hist, self.hist.max()))
+        return indices
+
+    def __get_move_to_nearest_orientation_point(self, coord):
+        orientation_point = self.__get_nearest_orientation_point(coord)
+        
+
+    def __get_nearest_orientation_point(self, coord):
+        exit_dist = self.__get_distance_between(coord, self.exit_coords)
+        exit_dist_full = np.sum(exit_dist)
+
+        nearest_jams = []
+
+        for jam_coord in self.jams_coords:
+            jam_exit_dist = self.__get_distance_between(jam_coord, self.exit_coords)
+            coord_jam_dist = self.__get_distance_between(jam_coord, coord)
+            jam_exit_dist_full = np.sum(jam_exit_dist)
+            coord_jam_dist_full = np.sum(coord_jam_dist)
+            full_dist = jam_exit_dist_full + coord_jam_dist_full
+            if full_dist <= exit_dist_full and coord_jam_dist_full != 0:
+                nearest_jams.append((coord_jam_dist_full, jam_coord))
+
+        if len(nearest_jams) == 0:
+            return self.exit_coords
+        else:
+            return min(nearest_jams, key=lambda x: x[0])
+
+    def __get_distance_between(self, coords_1, coords_2):
+        y_1, x_1 = coords_1
+        y_2, x_2 = coords_2
+
+        y_distance = min(abs(y_2 - y_1), y_1 + abs(self.height - y_2), y_2 + abs(self.height - y_1))
+        x_distance = min(abs(x_2 - x_1), x_1 + abs(self.width - x_2), x_2 + abs(self.width - x_1))
+        return y_distance, x_distance
+
+
+
     # nie zmieniac naglowka metody, tutaj agent decyduje w ktora strone sie ruszyc,
     # funkcja MUSI zwrocic jedna z wartosci [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
     def move(self):
-        # move = self.__get_move()
-        # self.__update_hist_after_move(move)
-        # return
-        self.__update_hist_after_move(Action.LEFT)
-        return Action.LEFT
+        move = self.__get_move()
+        self.__update_hist_after_move(move)
+        return move
+        # self.__update_hist_after_move(Action.LEFT)
+        # return Action.LEFT
 
     # nie zmieniac naglowka metody, tutaj agent udostepnia swoj histogram (ten z filtru
     # histogramowego), musi to byc tablica (lista list, krotka krotek...) o wymarach takich jak
