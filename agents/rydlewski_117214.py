@@ -111,7 +111,7 @@ class Agent:
         for max_coord in max_coords:
             move_dict[self.__get_move_to_nearest_orientation_point(max_coord)] += 1
 
-        return Action.UP
+        return max(move_dict, key=move_dict.key)
 
     def __get_max_coords(self):
         # toleration must be increased
@@ -121,6 +121,8 @@ class Agent:
     def __get_move_to_nearest_orientation_point(self, coord):
         orientation_point = self.__get_nearest_orientation_point(coord)
         
+        print(orientation_point)
+        # move = self.__get_
 
     def __get_nearest_orientation_point(self, coord):
         exit_dist = self.__get_distance_between(coord, self.exit_coords)
@@ -140,7 +142,7 @@ class Agent:
         if len(nearest_jams) == 0:
             return self.exit_coords
         else:
-            return min(nearest_jams, key=lambda x: x[0])
+            return min(nearest_jams, key=lambda x: x[0])[1]
 
     def __get_distance_between(self, coords_1, coords_2):
         y_1, x_1 = coords_1
