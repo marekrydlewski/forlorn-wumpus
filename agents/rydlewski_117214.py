@@ -8,10 +8,6 @@ from action import Action
 
 class Agent:
     def __init__(self, p, pj, pn, height, width, areaMap):
-
-        self.times_moved = 0
-        self.direction = Action.LEFT
-
         self.p = p
         self.p_small = (1 - p) / 4.0
         self.pj = pj  # p found jam if jam exists
@@ -21,6 +17,7 @@ class Agent:
         self.map = np.empty((height, width), dtype='str')
         self.exit_coord = None
         self.jams_coords = []
+        self.prev = None
 
         for x in range(self.height):
             for y in range(self.width):
@@ -140,6 +137,8 @@ class Agent:
             dist_left = self.width - dest_x + coord_x
             dist_right = abs(dest_x - coord_x)
 
+
+
         return random.choice([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
 
     def __get_nearest_orientation_point(self, coord):
@@ -179,6 +178,7 @@ class Agent:
     def move(self):
         move = self.__get_move()
         self.__update_hist_after_move(move)
+        self.prev = move
         return move
         # self.__update_hist_after_move(Action.LEFT)
         # return Action.LEFT
