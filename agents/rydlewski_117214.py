@@ -82,7 +82,7 @@ class Agent:
         new_hist = new_hist / partial_sum
 
         self.hist = new_hist
-        print(np.sum(self.hist))
+        # print(np.sum(self.hist))
 
     @staticmethod
     def __get_move_coords(move):
@@ -108,7 +108,7 @@ class Agent:
         for max_coord in max_coords:
             move_dict[self.__get_move_to_nearest_orientation_point(max_coord)] += 1
 
-        return max(move_dict, key=move_dict.key)
+        return max(move_dict, key=lambda x: move_dict.get(x, 0))
 
     def __get_max_coords(self):
         # toleration must be increased
@@ -118,7 +118,7 @@ class Agent:
     def __get_move_to_nearest_orientation_point(self, coord):
         orientation_point = self.__get_nearest_orientation_point(coord)
         
-        print(orientation_point)
+        # print(orientation_point)
         # move = self.__get_
         coord_y, coord_x = coord
         dest_y, dest_x = orientation_point
@@ -137,9 +137,25 @@ class Agent:
             dist_left = self.width - dest_x + coord_x
             dist_right = abs(dest_x - coord_x)
 
+        if dist_left >= dist_right:
+            if dist_right != 0 and self.prev != Action.LEFT:
+                return Action.RIGHT
+        else:
+            if dist_left != 0 and self.prev != Action.RIGHT:
+                return Action.LEFT
 
+        if dist_up >= dist_down:
+            if dist_down != 0: # and self.prev != Action.UP:
+                return Action.DOWN
+        else:
+            if dist_up != 0: # and self.prev != Action.DOWN:
+                return Action.UP
 
-        return random.choice([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
+        oposite_move = self.__get_oposite_move(self.prev)
+        possible_moves = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
+        possible_moves.remove(oposite_move)
+
+        return random.choice(possible_moves)
 
     def __get_nearest_orientation_point(self, coord):
         exit_dist = self.__get_distance_between(coord, self.exit_coord)
@@ -171,7 +187,18 @@ class Agent:
         x_distance = min(abs(x_2 - x_1), x_1 + abs(self.width - x_2), x_2 + abs(self.width - x_1))
         return y_distance, x_distance
 
-
+    def __get_oposite_move(self, move):
+        if move == Action.UP:
+            return Action.DOWN
+        elif move == Action.DOWN:
+            return Action.UP
+        elif move == Action.LEFT:
+            return Action.RIGHT
+        elif move == Action.RIGHT:
+            return Action.LEFT
+        else:
+            print("Bad move sent to function: get oposite move")
+            return None
 
     # nie zmieniac naglowka metody, tutaj agent decyduje w ktora strone sie ruszyc,
     # funkcja MUSI zwrocic jedna z wartosci [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
