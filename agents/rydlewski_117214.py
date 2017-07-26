@@ -127,15 +127,15 @@ class Agent:
             dist_down = dest_y - coord_y
             dist_up = self.height - dest_y + coord_y
         else:
-            dist_down = self.height - dest_y + coord_y
+            dist_down = self.height + dest_y - coord_y
             dist_up = abs(dest_y - coord_y)
 
         if dest_x - coord_x >= 0:
             dist_left = self.width - dest_x + coord_x
             dist_right = dest_x - coord_x
         else:
-            dist_left = self.width - dest_x + coord_x
-            dist_right = abs(dest_x - coord_x)
+            dist_left = abs(dest_x - coord_x)
+            dist_right = self.width + dest_x - coord_x
 
         if dist_left >= dist_right:
             if dist_right != 0 and self.prev != Action.LEFT:
@@ -145,10 +145,10 @@ class Agent:
                 return Action.LEFT
 
         if dist_up >= dist_down:
-            if dist_down != 0: # and self.prev != Action.UP:
+            if self.prev != Action.UP and dist_down != 0:
                 return Action.DOWN
         else:
-            if dist_up != 0: # and self.prev != Action.DOWN:
+            if self.prev != Action.DOWN and dist_up != 0: # and
                 return Action.UP
 
         oposite_move = self.__get_oposite_move(self.prev)
