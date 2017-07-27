@@ -1,5 +1,4 @@
 #!/usr/bin/python3)
-
 import random
 import numpy as np
 from collections import defaultdict
@@ -102,24 +101,24 @@ class Agent:
         ]
 
     def __get_move(self):
-        max_coords = self.__get_max_coords()
-        move_dict = defaultdict(int)
+        higher_coords = self.__get_higher_percentile()
+        move_dict = defaultdict(float)
 
-        for max_coord in max_coords:
-            move_dict[self.__get_move_to_nearest_orientation_point(max_coord)] += 1
+        for higher_coord in higher_coords:
+            move_dict[self.__get_move_to_nearest_orientation_point(higher_coord)] += self.hist[higher_coord[0], higher_coord[1]]
 
+        # print(move_dict)
         return max(move_dict, key=lambda x: move_dict.get(x, 0))
 
-    def __get_max_coords(self):
-        # toleration must be increased
-        indices = np.argwhere(np.isclose(self.hist, self.hist.max()))
+    def __get_higher_percentile(self):
+        # indices = np.argwhere(self.hist > np.percentile(self.hist, 50))
+        indices = np.argwhere(self.hist > np.average(self.hist))
         return indices
 
     def __get_move_to_nearest_orientation_point(self, coord):
         orientation_point = self.__get_nearest_orientation_point(coord)
-        
         # print(orientation_point)
-        # move = self.__get_
+
         coord_y, coord_x = coord
         dest_y, dest_x = orientation_point
 
@@ -148,12 +147,15 @@ class Agent:
             if self.prev != Action.UP and dist_down != 0:
                 return Action.DOWN
         else:
-            if self.prev != Action.DOWN and dist_up != 0: # and
+            if self.prev != Action.DOWN and dist_up != 0:  # and
                 return Action.UP
 
-        oposite_move = self.__get_oposite_move(self.prev)
+        return self.__get_random_sensible_move()
+
+    def __get_random_sensible_move(self):
+        opposite_move = self.__get_opposite_move(self.prev)
         possible_moves = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
-        possible_moves.remove(oposite_move)
+        possible_moves.remove(opposite_move)
 
         return random.choice(possible_moves)
 
@@ -187,7 +189,8 @@ class Agent:
         x_distance = min(abs(x_2 - x_1), x_1 + abs(self.width - x_2), x_2 + abs(self.width - x_1))
         return y_distance, x_distance
 
-    def __get_oposite_move(self, move):
+    @staticmethod
+    def __get_opposite_move(move):
         if move == Action.UP:
             return Action.DOWN
         elif move == Action.DOWN:
