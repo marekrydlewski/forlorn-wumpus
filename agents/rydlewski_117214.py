@@ -111,8 +111,8 @@ class Agent:
         return max(move_dict, key=lambda x: move_dict.get(x, 0))
 
     def __get_higher_percentile(self):
-        # indices = np.argwhere(self.hist > np.percentile(self.hist, 50))
-        indices = np.argwhere(self.hist > np.average(self.hist))
+        indices = np.argwhere(self.hist >= np.percentile(self.hist, 75))
+        # indices = np.argwhere(self.hist > np.average(self.hist))
         return indices
 
     def __get_move_to_nearest_orientation_point(self, coord):
@@ -136,18 +136,16 @@ class Agent:
             dist_left = abs(dest_x - coord_x)
             dist_right = self.width + dest_x - coord_x
 
-        if dist_left >= dist_right:
-            if dist_right != 0 and self.prev != Action.LEFT:
-                return Action.RIGHT
-        else:
-            if dist_left != 0 and self.prev != Action.RIGHT:
-                return Action.LEFT
+        if dist_left >= dist_right and dist_right != 0 and self.prev != Action.LEFT:
+            return Action.RIGHT
 
-        if dist_up >= dist_down:
-            if self.prev != Action.UP and dist_down != 0:
+        if dist_left < dist_right and dist_left != 0 and self.prev != Action.RIGHT:
+            return Action.LEFT
+
+        if dist_up >= dist_down and self.prev != Action.UP and dist_down != 0:
                 return Action.DOWN
-        else:
-            if self.prev != Action.DOWN and dist_up != 0:  # and
+
+        if dist_up < dist_down and self.prev != Action.DOWN and dist_up != 0:  # and
                 return Action.UP
 
         return self.__get_random_sensible_move()
