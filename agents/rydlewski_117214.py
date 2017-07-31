@@ -105,14 +105,20 @@ class Agent:
         move_dict = defaultdict(float)
 
         for higher_coord in higher_coords:
+            # e1, e2 = self.exit_coord
+            # h1, h2 = higher_coord
+            # if e1 == h1 and e2 == h2:
+            #     print("higher coord is exit coord!")
+            # else:
             move_dict[self.__get_move_to_nearest_orientation_point(higher_coord)] += self.hist[higher_coord[0], higher_coord[1]]
 
         # print(move_dict)
         return max(move_dict, key=lambda x: move_dict.get(x, 0))
 
     def __get_higher_percentile(self):
-        indices = np.argwhere(self.hist >= np.percentile(self.hist, 75))
-        # indices = np.argwhere(self.hist > np.average(self.hist))
+        perc = np.percentile(self.hist, 90, interpolation="lower")
+        #print(perc)
+        indices = np.argwhere(np.greater_equal(self.hist, perc))
         return indices
 
     def __get_move_to_nearest_orientation_point(self, coord):
