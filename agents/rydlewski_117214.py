@@ -116,7 +116,7 @@ class Agent:
         return max(move_dict, key=lambda x: move_dict.get(x, 0))
 
     def __get_higher_percentile(self):
-        perc = np.percentile(self.hist, 90, interpolation="lower")
+        perc = np.percentile(self.hist, 80, interpolation="higher")
         #print(perc)
         indices = np.argwhere(np.greater_equal(self.hist, perc))
         return indices
